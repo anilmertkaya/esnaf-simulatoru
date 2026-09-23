@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6EEDF">
+<title>Esnaf Simülatörü</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+:root{
+  --bg:#F6EEDF;--card:#FFFFFF;--line:#E4D6C0;--ink:#2B1B14;--muted:#6B5647;
+  --accent:#9E2B1B;--accent-ink:#FFFFFF;--brass:#C08A2E;--brass-soft:#FFF7E0;--gold:#E0B55E;
+  --dark:#2B1B14;--dark-ink:#F6EEDF;--off:#E4D6C0;--off-ink:#5E4A3D;--blue:#1F4FA3;--green:#2F6B3A;--scrim:rgba(43,27,20,.6);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1B1310;--card:#2A1E19;--line:#3E2E26;--ink:#F3E8D8;--muted:#C2AE9A;
+    --accent:#B8392A;--accent-ink:#FFFFFF;--brass:#D9A441;--brass-soft:#33261A;--gold:#E0B55E;
+    --dark:#0F0A08;--dark-ink:#F3E8D8;--off:#3E2E26;--off-ink:#C2AE9A;--blue:#3D6CC4;--green:#4E9A5B;--scrim:rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1B1310;--card:#2A1E19;--line:#3E2E26;--ink:#F3E8D8;--muted:#C2AE9A;
+  --accent:#B8392A;--accent-ink:#FFFFFF;--brass:#D9A441;--brass-soft:#33261A;--gold:#E0B55E;
+  --dark:#0F0A08;--dark-ink:#F3E8D8;--off:#3E2E26;--off-ink:#C2AE9A;--blue:#3D6CC4;--green:#4E9A5B;--scrim:rgba(0,0,0,.7);
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font-family:inherit;color:inherit}
+button:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+[hidden]{display:none!important}
+.display{font-family:'Baloo 2','Nunito',system-ui,sans-serif;font-weight:800}
+.app{max-width:480px;margin:0 auto;padding:0 16px calc(88px + env(safe-area-inset-bottom,0px))}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);display:flex;align-items:center;gap:8px;padding:12px 0 10px}
+.pill{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 14px 4px 6px;min-height:46px}
+.pill .num{font-size:20px;line-height:1.05}
+.pill .sub{font-size:11px;font-weight:700;color:var(--muted)}
+.money{flex:1;min-width:0}
+.money .col{display:flex;flex-direction:column;min-width:0}
+.gembtn{cursor:pointer;padding-right:12px}
+.screen{display:flex;flex-direction:column;gap:12px}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;min-height:40px;border-radius:999px;border:1px solid var(--line);background:var(--card);padding:0 14px;font-weight:800;font-size:13px;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--dark);color:var(--dark-ink);border-color:var(--dark)}
+.head{display:flex;flex-direction:column;gap:6px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.head h1,.title{margin:0;font-size:26px;line-height:1.1}
+.small{font-size:12px;font-weight:700;color:var(--muted)}
+.bar{height:10px;background:var(--off);border-radius:999px;overflow:hidden}
+.bar>div{height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .2s linear}
+.goalbtn{min-height:36px;border-radius:10px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:13px;padding:0 12px;cursor:pointer}
+.tap{position:relative;height:196px;border:2px solid var(--ink);border-radius:24px;background:var(--card);display:flex;align-items:center;justify-content:center;gap:12px;cursor:pointer;padding:0 16px;touch-action:manipulation;user-select:none;-webkit-user-select:none;width:100%}
+.tap:active .art{transform:scale(.93)}
+.art{transition:transform .08s ease-out;display:flex}
+.tap .t1{font-size:30px;line-height:1}
+.tap .t2{font-size:15px;font-weight:800;color:var(--accent)}
+.tapcol{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left}
+.quote{display:flex;align-items:center;gap:10px;min-height:42px;background:var(--dark);color:var(--dark-ink);border-radius:14px;padding:8px 14px}
+.quote b{font-size:11px;color:var(--gold);flex-shrink:0}
+.quote span{font-size:13px;font-weight:700}
+.boost{width:100%;min-height:52px;border-radius:14px;border:2px solid var(--brass);background:var(--brass-soft);display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:800;cursor:pointer;padding:6px 12px}
+.boost.on{background:var(--brass);color:#2B1B14}
+h2{margin:6px 0 0;font-size:15px;font-weight:800}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 8px 8px 12px;min-height:62px}
+.lvl{width:44px;height:44px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:var(--accent);flex-shrink:0;text-align:center;line-height:1.1}
+.info{flex:1;min-width:0;display:flex;flex-direction:column}
+.name{font-weight:800;font-size:14px}
+.desc{font-size:12px;color:var(--muted);font-weight:600}
+.buy{min-width:94px;min-height:46px;border-radius:12px;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;cursor:pointer;background:var(--accent);color:var(--accent-ink);padding:4px 10px;flex-shrink:0}
+.buy:disabled{background:var(--off);color:var(--off-ink);cursor:not-allowed}
+.buy.blue{background:var(--blue)}
+.buy.green{background:var(--green)}
+.buy.outline{background:transparent;border:2px solid var(--line);color:var(--muted)}
+.buy.blue:disabled,.buy.green:disabled,.buy:disabled{background:var(--off);color:var(--off-ink);cursor:not-allowed}
+.buy.outline:disabled{background:transparent}
+.buy .c{font-weight:800;font-size:14px}
+.buy .g{font-size:11px;font-weight:700}
+.note{margin:0;font-size:12px;font-weight:600;color:var(--muted);line-height:1.45}
+.biz{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:10px 10px 10px 8px}
+.biz .ic{width:64px;height:64px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.biz .ic svg{width:60px;height:60px}
+.biz.locked{border-style:dashed;background:transparent}
+.biz.locked .ic{opacity:.35;filter:grayscale(1)}
+.prest{background:var(--dark);color:var(--dark-ink);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.prest .desc{color:#C9B8A6}
+.prest .big{font-size:28px;color:var(--gold);line-height:1.1}
+.feat{background:var(--dark);color:var(--dark-ink);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.feat .desc{color:#C9B8A6}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.stats div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stats b{display:block;font-size:20px;line-height:1.2}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px}
+.seg button{min-height:40px;border-radius:10px;border:0;background:transparent;font-weight:800;font-size:13px;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--dark);color:var(--dark-ink)}
+.toggle{min-width:64px;min-height:36px;border-radius:999px;border:0;font-weight:800;font-size:13px;cursor:pointer;background:var(--off);color:var(--off-ink)}
+.toggle[aria-pressed="true"]{background:var(--green);color:#FFFFFF}
+.linkbtn{width:100%;min-height:50px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-weight:800;font-size:14px;text-align:left;padding:0 14px;cursor:pointer}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:64px}
+.nav button{position:relative;background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:800;color:var(--muted);cursor:pointer}
+.nav button[aria-current="page"]{color:var(--accent)}
+.dot{position:absolute;top:8px;left:calc(50% + 8px);width:10px;height:10px;border-radius:50%;background:var(--accent);border:2px solid var(--card)}
+.float{position:fixed;pointer-events:none;font-family:'Baloo 2','Nunito',sans-serif;font-weight:800;font-size:20px;color:var(--accent);animation:up .8s ease-out forwards;z-index:30}
+@keyframes up{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-60px)}}
+@media (prefers-reduced-motion: reduce){.float{animation-duration:.01s}.bar>div{transition:none}}
+.scrim{position:fixed;inset:0;background:var(--scrim);display:none;align-items:center;justify-content:center;padding:24px;z-index:40}
+.scrim.show{display:flex}
+.modal{width:100%;max-width:400px;max-height:calc(100% - 48px);overflow:auto;background:var(--bg);border-radius:26px;padding:24px 20px 20px;display:flex;flex-direction:column;gap:14px;text-align:center}
+.modal h3{margin:0;font-size:24px;line-height:1.15}
+.modal p{margin:0;font-size:14px;font-weight:600;color:var(--muted);line-height:1.45}
+.modal .legal{text-align:left}
+.modal .legal p{font-size:13px;margin-bottom:8px}
+.big{font-size:40px;color:var(--accent);line-height:1.1}
+.box{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px}
+.btns{display:flex;flex-direction:column;gap:10px}
+.btn{min-height:50px;border-radius:14px;border:2px solid var(--ink);background:transparent;font-weight:800;font-size:15px;cursor:pointer;padding:6px 12px}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:#2B1B14}
+.btn.red{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:var(--line);color:var(--muted)}
+.spin{width:48px;height:48px;border-radius:50%;border:5px solid var(--off);border-top-color:var(--brass);margin:0 auto;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--dark);color:var(--dark-ink);padding:10px 16px;border-radius:12px;font-weight:700;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:50;width:max-content;max-width:90%;text-align:center}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="pill money">
+      <svg width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="#C08A2E"/><circle cx="14" cy="14" r="8.5" fill="none" stroke="#F6D98B" stroke-width="2"/><text x="14" y="18.5" text-anchor="middle" font-size="12" font-weight="800" fill="#FFF7E0" font-family="Nunito, sans-serif">₺</text></svg>
+      <div class="col"><span class="num display" id="money">₺0</span><span class="sub" id="ps">Henüz pasif gelir yok</span></div>
+    </div>
+    <button class="pill gembtn" id="gemBtn" aria-label="Nazar Boncuğu, mağazayı aç">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1F4FA3"/><circle cx="12" cy="12" r="7.5" fill="#FFFFFF"/><circle cx="12" cy="12" r="4.5" fill="#6FA8E8"/><circle cx="12" cy="12" r="2.2" fill="#12213F"/></svg>
+      <span class="num display" id="gems">0</span>
+    </button>
+  </header>
+
+  <section class="screen" id="scr-dukkan">
+    <div class="chips" id="chips" aria-label="Açık dükkanların"></div>
+    <div class="head">
+      <div class="row"><h1 class="display" id="bizName"></h1><span class="small" id="bizPs"></span></div>
+      <div class="row small"><span id="goalLabel"></span><span id="goalVal"></span><button class="goalbtn" id="goalBtn" hidden>Şimdi aç</button></div>
+      <div class="bar" aria-hidden="true"><div id="goalBar"></div></div>
+    </div>
+    <button class="tap" id="tapBtn" type="button">
+      <span class="art" id="art"></span>
+      <span class="tapcol"><span class="t1 display" id="tapTitle"></span><span class="t2" id="tapVal"></span><span class="small" id="tapCount"></span></span>
+    </button>
+    <div class="quote" role="status"><b>Müşteri</b><span id="quote"></span></div>
+    <button class="boost" id="boostBtn" type="button"></button>
+    <h2>Geliştirmeler</h2>
+    <div class="list" id="ups"></div>
+    <p class="note">Her geliştirme 10, 20, 30… seviyede üretimini ikiye katlar.</p>
+  </section>
+
+  <section class="screen" id="scr-sehir" hidden>
+    <h1 class="title display">Şehir</h1>
+    <p class="note">Dükkanların burada. Hepsi aynı anda çalışır, kazançları birleşir.</p>
+    <div class="list" id="sehirList"></div>
+    <div id="prestBox"></div>
+  </section>
+
+  <section class="screen" id="scr-magaza" hidden>
+    <h1 class="title display">Mağaza</h1>
+    <div id="magazaBody"></div>
+  </section>
+
+  <section class="screen" id="scr-profil" hidden>
+    <h1 class="title display">Profil</h1>
+    <div id="profilBody"></div>
+  </section>
+</div>
+
+<nav class="nav" aria-label="Ana menü"><div class="in">
+  <button type="button" data-go="dukkan" aria-current="page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9M3 9h18M3 9c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3c0 1.7 1.3 3 3 3s3-1.3 3-3M5 12v8h14v-8M10 20v-5h4v5"/></svg>Dükkan</button>
+  <button type="button" data-go="sehir"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V9l5-3v15M10 21V4l9 4v13M13 10h3M13 14h3"/></svg>Şehir<span class="dot" id="dotSehir" hidden></span></button>
+  <button type="button" data-go="magaza"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8zM9 8V6a3 3 0 0 1 6 0v2"/></svg>Mağaza</button>
+  <button type="button" data-go="profil"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profil<span class="dot" id="dotProfil" hidden></span></button>
+</div></nav>
+
+<div class="scrim" id="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" id="modal"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+var CONFIG={VERSION:'1.0.0',ADS_ENABLED:false,CONTACT:'[E-POSTA ADRESİNİZ]'};
+var SAVE_KEY='esnaf-sim-save-v1';
+var OFFLINE_CAP=4*3600, BOOST_MS=30*60*1000, GEM_BONUS_DAILY=5, PREST_BASE=1e7;
+
+var ART={
+  cay:'<svg width="110" height="132" viewBox="0 0 150 180" aria-hidden="true"><path d="M64 26 C58 20 70 14 64 6" fill="none" stroke="#B9A68F" stroke-width="3" stroke-linecap="round"/><path d="M86 26 C80 20 92 14 86 6" fill="none" stroke="#B9A68F" stroke-width="3" stroke-linecap="round"/><ellipse cx="75" cy="166" rx="62" ry="11" fill="#C08A2E"/><ellipse cx="75" cy="162" rx="46" ry="6" fill="#E0B55E"/><path d="M45 34 H105 C105 59 90 76 88 94 C86 114 104 129 100 159 H50 C46 129 64 114 62 94 C60 76 45 59 45 34 Z" fill="#FDF8EF" stroke="#2B1B14" stroke-width="3" stroke-linejoin="round"/><path d="M50 52 H100 C98 66 88 78 86 94 C84 114 101 128 98 154 H52 C49 128 66 114 64 94 C62 78 52 66 50 52 Z" fill="#9E2B1B"/><path d="M58 58 C58 68 64 76 66 86" fill="none" stroke="#D9674F" stroke-width="3" stroke-linecap="round"/></svg>',
+  simit:'<svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="40" fill="none" stroke="#B5701F" stroke-width="26"/><circle cx="60" cy="60" r="53" fill="none" stroke="#2B1B14" stroke-width="2.5"/><circle cx="60" cy="60" r="27" fill="none" stroke="#2B1B14" stroke-width="2.5"/><g fill="#FFF3D6"><circle cx="30" cy="44" r="2.2"/><circle cx="40" cy="30" r="2"/><circle cx="56" cy="24" r="2.2"/><circle cx="74" cy="26" r="2"/><circle cx="88" cy="36" r="2.2"/><circle cx="96" cy="54" r="2"/><circle cx="94" cy="74" r="2.2"/><circle cx="84" cy="90" r="2"/><circle cx="66" cy="98" r="2.2"/><circle cx="46" cy="96" r="2"/><circle cx="30" cy="84" r="2.2"/><circle cx="24" cy="64" r="2"/><circle cx="36" cy="58" r="1.8"/><circle cx="82" cy="62" r="1.8"/></g></svg>',
+  lokanta:'<svg width="130" height="120" viewBox="0 0 130 120" aria-hidden="true"><path d="M50 22 C44 14 56 10 50 2" fill="none" stroke="#B9A68F" stroke-width="3" stroke-linecap="round"/><path d="M78 22 C72 14 84 10 78 2" fill="none" stroke="#B9A68F" stroke-width="3" stroke-linecap="round"/><rect x="22" y="46" width="86" height="58" rx="10" fill="#9E2B1B" stroke="#2B1B14" stroke-width="3"/><rect x="8" y="58" width="16" height="8" rx="4" fill="#2B1B14"/><rect x="106" y="58" width="16" height="8" rx="4" fill="#2B1B14"/><path d="M18 46 H112 C112 36 96 30 65 30 C34 30 18 36 18 46 Z" fill="#C08A2E" stroke="#2B1B14" stroke-width="3" stroke-linejoin="round"/><rect x="58" y="22" width="14" height="9" rx="4" fill="#2B1B14"/><path d="M32 70 H98" stroke="#D9674F" stroke-width="3" stroke-linecap="round"/></svg>',
+  zincir:'<svg width="120" height="130" viewBox="0 0 120 130" aria-hidden="true"><rect x="16" y="34" width="88" height="88" rx="6" fill="#FDF8EF" stroke="#2B1B14" stroke-width="3"/><path d="M10 34 L20 14 H100 L110 34 Z" fill="#9E2B1B" stroke="#2B1B14" stroke-width="3" stroke-linejoin="round"/><path d="M10 34 H110 V40 C104 46 96 46 90 40 C84 46 76 46 70 40 C64 46 56 46 50 40 C44 46 36 46 30 40 C24 46 16 46 10 40 Z" fill="#C08A2E" stroke="#2B1B14" stroke-width="3" stroke-linejoin="round"/><rect x="26" y="56" width="30" height="26" rx="3" fill="#6FA8E8" stroke="#2B1B14" stroke-width="3"/><rect x="64" y="56" width="30" height="26" rx="3" fill="#6FA8E8" stroke="#2B1B14" stroke-width="3"/><rect x="48" y="90" width="24" height="32" rx="3" fill="#9E2B1B" stroke="#2B1B14" stroke-width="3"/></svg>'
+};
+
+var BIZ=[
+  {id:'cay',name:"Hüsnü'nün Çay Ocağı",short:'Çay Ocağı',verb:'Çay Demle',unit:'çay demlendi',unlock:0,
+   ups:[{id:'semaver',name:'Büyük Semaver',desc:'Çay daha hızlı demlenir',base:50,ps:1},
+        {id:'cirak',name:'Çırak Memo',desc:'Sen yokken de çay taşır',base:200,ps:5},
+        {id:'tavla',name:'Tavla Masası',desc:'Müşteri oturur, çay söyler',base:750,ps:15}],
+   quotes:['Abi demli olsun ama açık olsun.','Hesabı yaz, ay sonu gelirim.','Bu çay dün demlenmemiş mi?','Muhtar geldi: iki çay, bir de tavla.','Bardak ince belli olsun, keyif başka.','Şekeri koyma, ben atarım… üç tane.','Çay taze mi? Kokusundan belli.','Bir çay daha, sonra kalkıyorum. Söz.']},
+  {id:'simit',name:'Susamlı Simit Fırını',short:'Simit Fırını',verb:'Simit Pişir',unit:'simit pişti',unlock:10000,
+   ups:[{id:'firin',name:'Taş Fırın',desc:'Simitler daha çıtır çıkar',base:2500,ps:40},
+        {id:'susam',name:'Susam Tezgâhı',desc:'Susamı cömert, müşterisi bol',base:9000,ps:120},
+        {id:'seyyar',name:'Seyyar Simitçi',desc:'Tablası kafasında, vapura koşar',base:30000,ps:350}],
+   quotes:['Taze mi abi? Dokunayım da bakayım.','Yanına üçgen peynir var mı?','İki simit, bir de martıya ayır.','Dünküler ucuz mu?','Simit çıtır, ben mutlu.','Susam bol olsun, hayat kısa.']},
+  {id:'lokanta',name:'Anadolu Esnaf Lokantası',short:'Lokanta',verb:'Tencere Kaynat',unit:'porsiyon çıktı',unlock:250000,
+   ups:[{id:'kuzine',name:'Kuzine Ocak',desc:'Kuru fasulye kendiliğinden pişer',base:60000,ps:900},
+        {id:'asci',name:'Usta Aşçı Kemal',desc:'Tuzu kararında, lafı bol',base:200000,ps:2800},
+        {id:'paket',name:'Paket Servis',desc:'Motorlu kurye mahalleyi sarar',base:700000,ps:8000}],
+   quotes:['Yarım porsiyon pilav üstü olsun.','Bugün ne var usta? Hep aynısı mı?','Ekmeği bol koy kardeşim.','Kuru fasulyenin yanına cacık şart.','Hesap bende! Yok bende! Yok bende!','Annemin yemeği gibi, ama tuzu az.']},
+  {id:'zincir',name:'Hüsnü Holding Restoranları',short:'Zincir Restoran',verb:'Şube Yönet',unit:'sipariş karşılandı',unlock:10000000,
+   ups:[{id:'merkez',name:'Merkez Mutfak',desc:'Tüm şubelere aynı lezzet',base:2500000,ps:30000},
+        {id:'franchise',name:'Franchise Şubesi',desc:'Başkası açar, sen kazanırsın',base:9000000,ps:100000},
+        {id:'reklam',name:'Reklam Filmi',desc:'Ünlü oyuncu çay içerken',base:35000000,ps:320000}],
+   quotes:['Eskiden daha güzeldi, çay ocağı zamanı.','Toplantıyı çay ocağında yapalım.','Hüsnü Bey, yatırımcı geldi.','Şubede de o semaver var mı?','Holding oldun ama çayın aynı.']}
+];
+
+var ACH=[
+  {id:'siftah',name:'Siftah',desc:'İlk çayını demle',reward:5,cur:function(){return S.taps;},goal:1},
+  {id:'caybasi',name:'Çaycıbaşı',desc:'500 kez dokun',reward:10,cur:function(){return S.taps;},goal:500},
+  {id:'semaver10',name:'Semaver Sesi',desc:'Büyük Semaver 10. seviye',reward:10,cur:function(){return S.owned.semaver;},goal:10},
+  {id:'firinci',name:'Fırıncı',desc:'Simit Fırını\'nı aç',reward:15,cur:function(){return S.unlocked.indexOf('simit')>=0?1:0;},goal:1},
+  {id:'milyoner',name:'Milyoner Esnaf',desc:'Toplam ₺1 Mn kazan',reward:15,cur:function(){return S.totalEarned;},goal:1e6},
+  {id:'lokantaci',name:'Lokantacı',desc:'Lokanta\'yı aç',reward:20,cur:function(){return S.unlocked.indexOf('lokanta')>=0?1:0;},goal:1},
+  {id:'bonuscu',name:'Fırsatçı',desc:'5 bonus topla',reward:10,cur:function(){return S.ads;},goal:5},
+  {id:'holding',name:'Holding Patronu',desc:'Zincir Restoran\'ı aç',reward:30,cur:function(){return S.unlocked.indexOf('zincir')>=0?1:0;},goal:1},
+  {id:'devir',name:'Devir Teslim',desc:'Holding\'i ilk kez devret',reward:50,cur:function(){return S.prestiges;},goal:1}
+];
+
+var S;
+function defaultState(){
+  var owned={};BIZ.forEach(function(b){b.ups.forEach(function(u){owned[u.id]=0;});});
+  return {v:2,money:120,gems:10,owned:owned,unlocked:['cay'],cur:'cay',boostEnd:0,lastSave:Date.now(),lastDaily:'',
+    taps:0,ads:0,tapsBy:{},fakeDoor:{},started:Date.now(),runEarned:0,totalEarned:0,itibar:0,prestiges:0,ach:{},
+    settings:{vib:true,theme:'system'},gemDay:'',gemCount:0,hint:0};
+}
+function load(){
+  try{
+    var raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;
+    var d=JSON.parse(raw);if(!d||typeof d!=='object')return false;
+    var base=defaultState();
+    for(var k in base){if(d[k]===undefined)d[k]=base[k];}
+    for(var id in base.owned){if(typeof d.owned[id]!=='number')d.owned[id]=0;}
+    if(!d.settings||typeof d.settings!=='object')d.settings=base.settings;
+    if(!isFinite(d.money)||d.money<0)d.money=0;
+    d.v=2;S=d;return true;
+  }catch(e){return false;}
+}
+function save(){S.lastSave=Date.now();try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
+
+function bizById(id){for(var i=0;i<BIZ.length;i++){if(BIZ[i].id===id)return BIZ[i];}return BIZ[0];}
+function isOpen(b){return S.unlocked.indexOf(b.id)>=0;}
+function mult(){return 1+0.1*S.itibar;}
+function upPs(u){var n=S.owned[u.id]||0;return u.ps*n*Math.pow(2,Math.floor(n/10))*mult();}
+function bizPs(b){var t=0;b.ups.forEach(function(u){t+=upPs(u);});return t;}
+function basePs(){var t=0;BIZ.forEach(function(b){if(isOpen(b))t+=bizPs(b);});return t;}
+function boostOn(){return S.boostEnd>Date.now();}
+function totalPs(){return basePs()*(boostOn()?2:1);}
+function tapValue(){return Math.max(5,Math.floor(5*mult()+basePs()*0.05))*(boostOn()?2:1);}
+function cost(u){return Math.round(u.base*Math.pow(1.15,S.owned[u.id]||0));}
+function nextLocked(){for(var i=0;i<BIZ.length;i++){if(!isOpen(BIZ[i]))return BIZ[i];}return null;}
+function prestGain(){return Math.floor(Math.sqrt(S.runEarned/PREST_BASE));}
+function earn(v){S.money+=v;S.runEarned+=v;S.totalEarned+=v;}
+function claimable(){return ACH.filter(function(a){return !S.ach[a.id]&&a.cur()>=a.goal;});}
+
+function fmt(n){
+  n=Math.floor(n);
+  if(n<1e6)return n.toLocaleString('tr-TR');
+  var units=[[1e18,'Kt'],[1e15,'Kn'],[1e12,'Tn'],[1e9,'Mr'],[1e6,'Mn']];
+  for(var i=0;i<units.length;i++){if(n>=units[i][0]){var x=n/units[i][0];return x.toFixed(x<10?2:1).replace('.',',')+' '+units[i][1];}}
+  return String(n);
+}
+function fmtDur(sec){sec=Math.floor(sec);var h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60);if(h>0)return h+' saat '+m+' dakika';if(m>0)return m+' dakika';return sec+' saniye';}
+function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function bonusWord(){return CONFIG.ADS_ENABLED?'Reklam izle':'Bonus al';}
+
+function cap(){return window.Capacitor&&window.Capacitor.Plugins?window.Capacitor.Plugins:null;}
+function buzz(){
+  if(!S.settings.vib)return;
+  try{var p=cap();if(p&&p.Haptics){p.Haptics.impact({style:'LIGHT'});return;}}catch(e){}
+  try{if(navigator.vibrate)navigator.vibrate(8);}catch(e){}
+}
+function applyTheme(){
+  var t=S.settings.theme;
+  if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);
+  else document.documentElement.removeAttribute('data-theme');
+}
+
+var $=function(id){return document.getElementById(id);};
+var el={money:$('money'),ps:$('ps'),gems:$('gems'),chips:$('chips'),bizName:$('bizName'),bizPs:$('bizPs'),goalLabel:$('goalLabel'),goalVal:$('goalVal'),goalBtn:$('goalBtn'),goalBar:$('goalBar'),tap:$('tapBtn'),art:$('art'),tapTitle:$('tapTitle'),tapVal:$('tapVal'),tapCount:$('tapCount'),quote:$('quote'),ups:$('ups'),boost:$('boostBtn'),scrim:$('scrim'),modal:$('modal'),toast:$('toast')};
+var screen='dukkan',rows=[],qIdx={},sig={};
+
+/* ---------- navigation ---------- */
+function go(name){
+  screen=name;
+  ['dukkan','sehir','magaza','profil'].forEach(function(n){$('scr-'+n).hidden=(n!==name);});
+  document.querySelectorAll('.nav [data-go]').forEach(function(b){if(b.dataset.go===name)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
+  sig={};window.scrollTo(0,0);
+  if(name==='dukkan')renderDukkan();
+  updateUI();
+}
+document.querySelectorAll('.nav [data-go]').forEach(function(b){b.addEventListener('click',function(){go(b.dataset.go);});});
+$('gemBtn').addEventListener('click',function(){go('magaza');});
+
+/* ---------- dükkan ---------- */
+function renderChips(){
+  el.chips.innerHTML='';
+  var open=BIZ.filter(isOpen);
+  el.chips.hidden=open.length<2;
+  open.forEach(function(b){
+    var c=document.createElement('button');c.type='button';c.className='chip';c.textContent=b.short;
+    c.setAttribute('aria-pressed',S.cur===b.id?'true':'false');
+    c.onclick=function(){S.cur=b.id;renderDukkan();};
+    el.chips.appendChild(c);
+  });
+}
+function renderDukkan(){
+  renderChips();
+  var b=bizById(S.cur);
+  el.bizName.textContent=b.name;
+  el.art.innerHTML=ART[b.id];
+  el.tapTitle.textContent=b.verb;
+  el.tap.setAttribute('aria-label',b.verb);
+  el.quote.textContent=b.quotes[(qIdx[b.id]||0)%b.quotes.length];
+  el.ups.innerHTML='';rows=[];
+  b.ups.forEach(function(u){
+    var r=document.createElement('div');r.className='item';
+    r.innerHTML='<div class="lvl"></div><div class="info"><span class="name"></span><span class="desc"></span></div><button class="buy" type="button"><span class="c"></span><span class="g"></span></button>';
+    r.querySelector('.name').textContent=u.name;r.querySelector('.desc').textContent=u.desc;
+    var btn=r.querySelector('.buy');btn.onclick=function(){buy(u);};
+    el.ups.appendChild(r);
+    rows.push({u:u,lvl:r.querySelector('.lvl'),btn:btn,c:r.querySelector('.c'),g:r.querySelector('.g')});
+  });
+  updateUI();
+}
+function buy(u){
+  var c=cost(u);if(S.money<c)return;
+  S.money-=c;S.owned[u.id]=(S.owned[u.id]||0)+1;buzz();
+  if(S.owned[u.id]%10===0)toast(u.name+' '+S.owned[u.id]+'. seviye: üretim 2 katına çıktı!');
+  if(S.hint<2&&u.id==='semaver'){S.hint=2;toast('Harika! Artık sen dokunmasan da para geliyor.');}
+  updateUI();
+}
+function tryUnlock(b){
+  if(S.money<b.unlock){toast(b.short+' için ₺'+fmt(b.unlock-S.money)+' daha lazım.');return;}
+  S.money-=b.unlock;S.unlocked.push(b.id);S.cur=b.id;save();buzz();
+  go('dukkan');
+  showModal({title:b.short+' açıldı!',html:'<p>Yeni dükkanın hayırlı olsun. Eski dükkanların çalışmaya devam ediyor, kazançları birleşir. Dükkanlar arasında üstteki düğmelerle geçebilirsin.</p>',buttons:[{label:'Hadi bakalım',cls:'primary'}]});
+}
+el.goalBtn.addEventListener('click',function(){var nl=nextLocked();if(nl)tryUnlock(nl);});
+el.tap.addEventListener('click',function(e){
+  var b=bizById(S.cur),v=tapValue();
+  earn(v);S.taps++;S.tapsBy[b.id]=(S.tapsBy[b.id]||0)+1;buzz();
+  qIdx[b.id]=(qIdx[b.id]||0)+1;
+  if(qIdx[b.id]%3===0)el.quote.textContent=b.quotes[Math.floor(qIdx[b.id]/3)%b.quotes.length];
+  var x=e.clientX,y=e.clientY;
+  if(!x&&!y){var rc=el.tap.getBoundingClientRect();x=rc.left+rc.width/2;y=rc.top+rc.height/2;}
+  var f=document.createElement('div');f.className='float';f.textContent='+₺'+fmt(v);
+  f.style.left=x+'px';f.style.top=(y-20)+'px';document.body.appendChild(f);
+  setTimeout(function(){f.remove();},850);
+  if(S.hint===0&&S.taps>=5){S.hint=1;toast('Güzel gidiyor! ₺50 olunca Büyük Semaver\'i al.');}
+  updateUI();
+});
+el.boost.addEventListener('click',function(){
+  if(boostOn()){toast('2x kazanç zaten aktif.');return;}
+  reward(function(){S.boostEnd=Date.now()+BOOST_MS;save();updateUI();toast('30 dakika boyunca 2x kazanç!');});
+});
+var bolt='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>';
+
+/* ---------- şehir ---------- */
+function renderSehir(){
+  var list=$('sehirList');list.innerHTML='';
+  var nl=nextLocked();
+  BIZ.forEach(function(b){
+    var open=isOpen(b),isNext=(b===nl);
+    var card=document.createElement('div');card.className='biz'+(open?'':' locked');
+    var lv=0;b.ups.forEach(function(u){lv+=S.owned[u.id]||0;});
+    var title=open||isNext?b.name:'Gizli dükkan';
+    var sub=open?('₺'+fmt(bizPs(b))+' / sn · toplam '+lv+' seviye'):('Açılış bedeli ₺'+fmt(b.unlock));
+    card.innerHTML='<div class="ic">'+(open||isNext?ART[b.id]:'<svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>')+'</div><div class="info"><span class="name">'+esc(title)+'</span><span class="desc">'+esc(sub)+'</span></div>';
+    var btn=document.createElement('button');btn.type='button';btn.className='buy';
+    if(open){btn.className='buy outline';btn.innerHTML='<span class="c">Git</span>';btn.onclick=function(){S.cur=b.id;go('dukkan');};btn.setAttribute('aria-label',b.short+' dükkanına git');}
+    else if(isNext){btn.innerHTML='<span class="c">Aç</span><span class="g">₺'+fmt(b.unlock)+'</span>';btn.disabled=S.money<b.unlock;btn.onclick=function(){tryUnlock(b);};btn.setAttribute('aria-label',b.short+' aç, ₺'+fmt(b.unlock));}
+    else{btn.disabled=true;btn.innerHTML='<span class="c">Kilitli</span>';}
+    card.appendChild(btn);list.appendChild(card);
+  });
+  var box=$('prestBox');var g=prestGain();
+  box.innerHTML='<div class="prest"><span class="display" style="font-size:20px">Holding\'i devret</span>'+
+    '<span class="desc">Tüm dükkanlarını satıp sıfırdan başla, karşılığında kalıcı <b>Esnaf İtibarı</b> kazan. Her itibar puanı tüm kazancını %10 artırır. Boncukların ve başarımların kalır.</span>'+
+    '<div class="row"><span class="small" style="color:#C9B8A6">Şu anki itibar: '+S.itibar+' (x'+mult().toFixed(1).replace('.',',')+')</span></div>'+
+    '<div class="big display">+'+g+' itibar</div>'+
+    (g<1?'<span class="desc">İlk puan için bu turda ₺'+fmt(PREST_BASE)+' kazanman gerekiyor. Bu turdaki kazancın: ₺'+fmt(S.runEarned)+'</span>':'')+
+    '<button type="button" class="btn primary" id="prestBtn"'+(g<1?' disabled style="opacity:.45"':'')+'>Devret ve yeniden başla</button></div>';
+  $('prestBtn').onclick=function(){
+    if(prestGain()<1)return;
+    showModal({title:'Emin misin?',html:'<p>Paran, dükkanların ve geliştirmelerin sıfırlanacak. Karşılığında <b>+'+prestGain()+' itibar</b> alacaksın ve bundan sonra her şeyi daha hızlı kazanacaksın.</p>',
+      buttons:[{label:'Evet, devret',cls:'red',onClick:doPrestige},{label:'Vazgeç',cls:'ghost'}]});
+  };
+}
+function doPrestige(){
+  var g=prestGain();if(g<1)return;
+  var keep={gems:S.gems,itibar:S.itibar+g,prestiges:S.prestiges+1,ach:S.ach,settings:S.settings,taps:S.taps,ads:S.ads,tapsBy:S.tapsBy,fakeDoor:S.fakeDoor,started:S.started,totalEarned:S.totalEarned,lastDaily:S.lastDaily,gemDay:S.gemDay,gemCount:S.gemCount,hint:S.hint,boostEnd:S.boostEnd};
+  S=defaultState();for(var k in keep)S[k]=keep[k];
+  save();go('dukkan');
+  setTimeout(function(){showModal({title:'Yeni bir başlangıç',html:'<p>Hüsnü Usta yine çay ocağında. Ama artık herkes onu tanıyor: tüm kazancın x'+mult().toFixed(1).replace('.',',')+'.</p>',buttons:[{label:'Başlayalım',cls:'primary'}]});},50);
+}
+
+/* ---------- mağaza ---------- */
+function gemLeft(){if(S.gemDay!==today()){S.gemDay=today();S.gemCount=0;}return GEM_BONUS_DAILY-S.gemCount;}
+function renderMagaza(){
+  var left=gemLeft();
+  var h='<div class="list">'+
+   '<div class="feat"><span class="display" style="font-size:22px;color:var(--gold)">Esnaf Kartı</span><span class="desc">Reklamsız oyun, her gün 50 Nazar Boncuğu, 12 saate kadar çevrimdışı kazanç.</span><button type="button" class="btn primary" data-act="fd-kart">Çok yakında</button></div>'+
+   '<h2>Boncukla hızlan</h2>'+
+   item('Zaman atla: 1 saat','1 saatlik kazancı hemen al: ₺'+fmt(basePs()*3600),'skip1','15 boncuk','blue',S.gems<15||basePs()<=0)+
+   item('Zaman atla: 4 saat','4 saatlik kazancı hemen al: ₺'+fmt(basePs()*14400),'skip4','50 boncuk','blue',S.gems<50||basePs()<=0)+
+   '<h2>Ücretsiz</h2>'+
+   item('Günlük boncuk','Bugün '+left+' hakkın kaldı','gem','+5 boncuk','green',left<=0)+
+   '<h2>Boncuk paketleri</h2>'+
+   item('Avuç dolusu: 100 boncuk','Küçük bir başlangıç','fd-100','Yakında','',false)+
+   item('Kese: 550 boncuk','En çok tercih edilecek paket','fd-550','Yakında','',false)+
+   item('Sandık: 1.200 boncuk','Holding sahipleri için','fd-1200','Yakında','',false)+
+   '</div><p class="note" style="margin-top:12px">Gerçek parayla satın alma henüz açık değil. "Yakında" düğmelerine dokunman, hangi paketlerin önce geleceğine karar vermemize yardım eder.</p>';
+  var body=$('magazaBody');body.innerHTML=h;
+  body.querySelectorAll('[data-act]').forEach(function(b){b.onclick=function(){shopAct(b.dataset.act);};});
+}
+function item(name,desc,act,label,cls,disabled){
+  return '<div class="item"><div class="info"><span class="name">'+esc(name)+'</span><span class="desc">'+esc(desc)+'</span></div><button class="buy '+cls+'" type="button" data-act="'+act+'"'+(disabled?' disabled':'')+'><span class="c">'+esc(label)+'</span></button></div>';
+}
+function shopAct(a){
+  if(a==='skip1'||a==='skip4'){
+    var price=a==='skip1'?15:50,secs=a==='skip1'?3600:14400;
+    if(S.gems<price){toast('Yeterli boncuğun yok.');return;}
+    var amt=basePs()*secs;if(amt<=0){toast('Önce bir geliştirme al.');return;}
+    S.gems-=price;earn(amt);save();buzz();toast('+₺'+fmt(amt)+' kazandın!');sig={};updateUI();
+  }else if(a==='gem'){
+    if(gemLeft()<=0){toast('Bugünlük hakkın bitti, yarın yine gel.');return;}
+    reward(function(){S.gemCount++;S.gems+=5;save();sig={};updateUI();toast('+5 Nazar Boncuğu!');});
+  }else{
+    S.fakeDoor[a]=(S.fakeDoor[a]||0)+1;save();toast('Çok yakında! İlgin için teşekkürler.');
+  }
+}
+
+/* ---------- profil ---------- */
+function renderProfil(){
+  var days=Math.max(1,Math.ceil((Date.now()-S.started)/86400000));
+  var h='<div class="stats">'+
+    '<div><span class="small">Toplam kazanç</span><b class="display">₺'+fmt(S.totalEarned)+'</b></div>'+
+    '<div><span class="small">Toplam dokunuş</span><b class="display">'+fmt(S.taps)+'</b></div>'+
+    '<div><span class="small">Esnaf İtibarı</span><b class="display">'+S.itibar+'</b></div>'+
+    '<div><span class="small">Oynadığın gün</span><b class="display">'+days+'</b></div></div>'+
+    '<h2 style="margin-top:14px">Başarımlar</h2><div class="list" style="margin-top:8px">';
+  ACH.forEach(function(a){
+    var c=Math.min(a.cur(),a.goal),done=c>=a.goal,got=!!S.ach[a.id];
+    var prog=a.goal>1?(a.goal>=1e6?'₺'+fmt(c)+' / ₺'+fmt(a.goal):fmt(c)+' / '+fmt(a.goal)):'';
+    h+='<div class="item"><div class="lvl">'+(got?'✓':'+'+a.reward)+'</div><div class="info"><span class="name">'+esc(a.name)+'</span><span class="desc">'+esc(a.desc)+(prog&&!got?' · '+prog:'')+'</span></div>'+
+      (got?'<button class="buy outline" type="button" disabled><span class="c">Alındı</span></button>':
+       '<button class="buy green" type="button" data-ach="'+a.id+'"'+(done?'':' disabled')+'><span class="c">'+(done?'Ödülü al':'Devam')+'</span><span class="g">+'+a.reward+' boncuk</span></button>')+'</div>';
+  });
+  h+='</div><h2 style="margin-top:14px">Ayarlar</h2><div class="list" style="margin-top:8px">'+
+    '<div class="item"><div class="info"><span class="name">Titreşim</span><span class="desc">Dokunurken hafif titreşim</span></div><button type="button" class="toggle" id="vibBtn" aria-pressed="'+(S.settings.vib?'true':'false')+'">'+(S.settings.vib?'Açık':'Kapalı')+'</button></div>'+
+    '<div class="item" style="flex-direction:column;align-items:stretch"><span class="name">Görünüm</span><div class="seg" id="themeSeg">'+
+      ['system:Sistem','light:Açık','dark:Koyu'].map(function(x){var p=x.split(':');return '<button type="button" data-theme-set="'+p[0]+'" aria-pressed="'+(S.settings.theme===p[0]?'true':'false')+'">'+p[1]+'</button>';}).join('')+
+    '</div></div>'+
+    '<button type="button" class="linkbtn" id="privBtn">Gizlilik politikası</button>'+
+    '<button type="button" class="linkbtn" id="aboutBtn">Hakkında</button>'+
+    '<button type="button" class="linkbtn" id="resetBtn" style="color:var(--accent)">İlerlemeyi sıfırla</button>'+
+    '</div><p class="note" style="margin-top:12px;text-align:center">Esnaf Simülatörü · sürüm '+CONFIG.VERSION+'</p>';
+  var body=$('profilBody');body.innerHTML=h;
+  body.querySelectorAll('[data-ach]').forEach(function(b){b.onclick=function(){
+    var a=ACH.filter(function(x){return x.id===b.dataset.ach;})[0];
+    if(!a||S.ach[a.id]||a.cur()<a.goal)return;
+    S.ach[a.id]=Date.now();S.gems+=a.reward;save();buzz();toast(a.name+': +'+a.reward+' Nazar Boncuğu!');sig={};updateUI();
+  };});
+  $('vibBtn').onclick=function(){S.settings.vib=!S.settings.vib;save();sig={};updateUI();buzz();};
+  body.querySelectorAll('[data-theme-set]').forEach(function(b){b.onclick=function(){S.settings.theme=b.dataset.themeSet;applyTheme();save();sig={};updateUI();};});
+  $('privBtn').onclick=showPrivacy;
+  $('aboutBtn').onclick=function(){showModal({title:'Esnaf Simülatörü',html:'<p>Sürüm '+CONFIG.VERSION+'</p><p>Çay ocağından holdinge uzanan bir esnaf hikâyesi. Hüsnü Usta ve Çırak Memo tamamen hayal ürünüdür.</p><p>Yazı tipleri: Baloo 2 ve Nunito (SIL Open Font License).</p>',buttons:[{label:'Kapat',cls:'primary'}]});};
+  $('resetBtn').onclick=function(){showModal({title:'İlerlemeyi sıfırla?',html:'<p>Tüm paran, dükkanların, boncukların ve başarımların silinecek. Bu işlem geri alınamaz.</p>',buttons:[
+    {label:'Evet, her şeyi sil',cls:'red',onClick:function(){var st=S.settings;S=defaultState();S.settings=st;S.lastDaily=today();save();go('dukkan');toast('Yeni bir başlangıç!');}},
+    {label:'Vazgeç',cls:'ghost'}]});};
+}
+function showPrivacy(){
+  showModal({title:'Gizlilik politikası',html:'<div class="legal">'+
+    '<p>Esnaf Simülatörü kişisel verilerini toplamaz, saklamaz ve kimseyle paylaşmaz.</p>'+
+    '<p>Oyun ilerlemen (paran, dükkanların, ayarların) yalnızca bu cihazda saklanır. Uygulamayı sildiğinde bu veriler de silinir.</p>'+
+    '<p>Oyunda hesap oluşturma, reklam, analiz aracı veya gerçek parayla satın alma şu an bulunmuyor. Bunlardan biri eklenirse bu politika güncellenecek ve oyunda sana bildirilecek.</p>'+
+    '<p>Soruların için: '+esc(CONFIG.CONTACT)+'</p></div>',buttons:[{label:'Kapat',cls:'primary'}]});
+}
+
+/* ---------- ui update ---------- */
+function updateUI(){
+  el.money.textContent='₺'+fmt(S.money);
+  var ps=totalPs();
+  el.ps.textContent=ps>0?'+₺'+fmt(ps)+' / sn'+(boostOn()?' (2x)':''):'Henüz pasif gelir yok';
+  el.gems.textContent=S.gems;
+  var nl=nextLocked();
+  $('dotSehir').hidden=!(nl&&S.money>=nl.unlock)&&prestGain()<1;
+  $('dotProfil').hidden=claimable().length===0;
+  if(screen==='dukkan'){
+    var b=bizById(S.cur);
+    el.bizPs.textContent='₺'+fmt(bizPs(b)*(boostOn()?2:1))+' / sn';
+    el.tapVal.textContent='+₺'+fmt(tapValue())+' / dokunuş';
+    el.tapCount.textContent='Toplam '+fmt(S.tapsBy[b.id]||0)+' '+b.unit;
+    if(nl){
+      var ready=S.money>=nl.unlock;
+      el.goalLabel.textContent='Sıradaki: '+nl.short;
+      el.goalVal.hidden=ready;el.goalBtn.hidden=!ready;
+      el.goalVal.textContent='₺'+fmt(S.money)+' / ₺'+fmt(nl.unlock);
+      el.goalBar.style.width=Math.min(100,S.money/nl.unlock*100).toFixed(1)+'%';
+    }else{
+      el.goalLabel.textContent='Tüm dükkanlar açık. Şehir\'den holding\'i devredebilirsin.';
+      el.goalVal.textContent='';el.goalVal.hidden=false;el.goalBtn.hidden=true;el.goalBar.style.width='100%';
+    }
+    rows.forEach(function(r){
+      var n=S.owned[r.u.id]||0,c=cost(r.u);
+      r.lvl.textContent='Sv '+n;r.c.textContent='₺'+fmt(c);
+      r.g.textContent='+₺'+fmt(r.u.ps*Math.pow(2,Math.floor((n+1)/10))*mult())+'/sn';
+      r.btn.disabled=S.money<c;r.btn.setAttribute('aria-label',r.u.name+' satın al, ₺'+fmt(c));
+    });
+    if(boostOn()){
+      var left=Math.max(0,Math.floor((S.boostEnd-Date.now())/1000));
+      el.boost.classList.add('on');
+      el.boost.innerHTML=bolt+'<span>2x kazanç aktif · '+String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0')+'</span>';
+    }else{el.boost.classList.remove('on');el.boost.innerHTML=bolt+'<span>'+bonusWord()+': 30 dk boyunca 2x kazanç</span>';}
+  }else if(screen==='sehir'){
+    var s1=[S.unlocked.join(','),nl&&S.money>=nl.unlock,prestGain(),S.itibar,Math.floor(Math.log10(S.runEarned+1)*4)].join('|');
+    if(sig.sehir!==s1){sig.sehir=s1;renderSehir();}
+  }else if(screen==='magaza'){
+    var s2=[S.gems,gemLeft(),Math.floor(Math.log10(basePs()+1)*8)].join('|');
+    if(sig.magaza!==s2){sig.magaza=s2;renderMagaza();}
+  }else if(screen==='profil'){
+    var s3=[claimable().length,Object.keys(S.ach).length,S.settings.vib,S.settings.theme,S.itibar,Math.floor(Math.log10(S.totalEarned+1)*2),Math.floor(S.taps/50)].join('|');
+    if(sig.profil!==s3){sig.profil=s3;renderProfil();}
+  }
+}
+
+/* ---------- modals ---------- */
+var queue=[],current=null;
+function showModal(m){queue.push(m);if(!current)nextModal();}
+function nextModal(){
+  var m=queue.shift();current=m||null;
+  if(!m){el.scrim.classList.remove('show');return;}
+  el.modal.innerHTML='<h3 class="display" id="mTitle"></h3>'+(m.html||'')+'<div class="btns"></div>';
+  el.modal.querySelector('#mTitle').textContent=m.title;
+  var box=el.modal.querySelector('.btns');
+  (m.buttons||[]).forEach(function(bt){
+    var b=document.createElement('button');b.type='button';b.className='btn '+(bt.cls||'');b.textContent=bt.label;
+    b.onclick=function(){var keep=bt.onClick&&bt.onClick(b);if(keep!==true)nextModal();};
+    box.appendChild(b);
+  });
+  if(m.onOpen)m.onOpen(el.modal);
+  el.scrim.classList.add('show');
+  var first=box.querySelector('button');if(first)first.focus();
+}
+function reward(done){
+  var n=2;
+  showModal({lock:true,title:CONFIG.ADS_ENABLED?'Reklam':'Bonus hazırlanıyor',html:'<div class="spin" aria-hidden="true"></div><p>'+(CONFIG.ADS_ENABLED?'Reklam yükleniyor…':'Hüsnü Usta bonusunu hazırlıyor…')+'</p>',buttons:[],
+    onOpen:function(){var t=setInterval(function(){n--;if(n<=0){clearInterval(t);S.ads++;nextModal();done();}},1000);}});
+}
+var toastT;
+function toast(msg){el.toast.textContent=msg;el.toast.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){el.toast.classList.remove('show');},2400);}
+
+/* ---------- return / daily ---------- */
+function checkReturn(){
+  var now=Date.now(),away=(now-S.lastSave)/1000;
+  if(away<0){S.lastSave=now;}
+  else if(away>60){
+    var secs=Math.min(away,OFFLINE_CAP),amt=basePs()*secs;
+    if(amt>=1){
+      var who=S.owned.cirak>0?'Çırak Memo':'Dükkanın';
+      showModal({title:'Sen yokken dükkan boş kalmadı',
+        html:'<p>'+who+' '+fmtDur(secs)+' boyunca çalıştı.'+(away>OFFLINE_CAP?' Çevrimdışı kazanç en fazla 4 saat birikir.':'')+'</p><div class="box"><span class="small">Çevrimdışı kazanç</span><div class="big display">₺'+fmt(amt)+'</div></div>',
+        buttons:[
+          {label:bonusWord()+', 2 katını topla (₺'+fmt(amt*2)+')',cls:'primary',onClick:function(){nextModal();reward(function(){earn(amt*2);save();updateUI();toast('+₺'+fmt(amt*2)+' toplandı!');});return true;}},
+          {label:'Topla',onClick:function(){earn(amt);save();updateUI();}}]});
+    }
+  }
+  var d=today();
+  if(S.lastDaily!==d){
+    var first=!S.lastDaily;S.lastDaily=d;
+    if(!first){S.gems+=10;showModal({title:'Günlük bonus',html:'<p>Esnaf erken kalkar! Bugünkü bonusun hazır.</p><div class="box"><div class="big display">+10 boncuk</div></div>',buttons:[{label:'Al',cls:'primary'}]});}
+  }
+  S.lastSave=now;save();updateUI();
+}
+
+/* ---------- loop & lifecycle ---------- */
+var last=performance.now(),lastUi=0,lastSaveT=0;
+function frame(t){
+  var dt=Math.min(1,(t-last)/1000);last=t;
+  var ps=totalPs();if(ps>0)earn(ps*dt);
+  if(t-lastUi>120){updateUI();lastUi=t;}
+  if(t-lastSaveT>5000){save();lastSaveT=t;}
+  requestAnimationFrame(frame);
+}
+document.addEventListener('visibilitychange',function(){if(document.hidden)save();else{last=performance.now();checkReturn();}});
+window.addEventListener('pagehide',save);
+try{
+  var p=cap();
+  if(p&&p.App){
+    p.App.addListener('backButton',function(){
+      if(current){if(!current.lock)nextModal();return;}
+      if(screen!=='dukkan'){go('dukkan');return;}
+      save();if(p.App.minimizeApp)p.App.minimizeApp();else if(p.App.exitApp)p.App.exitApp();
+    });
+    p.App.addListener('pause',save);
+  }
+}catch(e){}
+
+S=defaultState();
+var had=load();
+applyTheme();
+go('dukkan');
+if(had){checkReturn();}
+else{
+  S.lastDaily=today();save();
+  showModal({title:'Hayırlı işler!',html:'<p>Hüsnü Usta çay ocağını sana devretti. Çay demle, dükkanı büyüt, bir gün holding ol.</p><p>Başlangıç için ₺120 ve 10 Nazar Boncuğu senden.</p>',buttons:[{label:'Dükkanı aç',cls:'primary'}]});
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

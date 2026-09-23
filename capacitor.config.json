@@ -1,0 +1,14 @@
+{
+  "appId": "com.esnafsimulatoru.oyun",
+  "appName": "Esnaf Simülatörü",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#F6EEDF"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "native",
+      "initialViewportFitValueHint": "cover"
+    }
+  }
+}
